@@ -11,6 +11,7 @@ Links:
 #let background = silver
 #let foreground = navy
 #let link-background = eastern
+#let problem-background = rgb(255, 204, 0)
 
 #show: simple-theme.with(
     aspect-ratio: "16-9",
@@ -26,6 +27,12 @@ Links:
 #let huge-size = 1.6em
 
 // #set text(font: "Fira Mono")
+// #show raw: it => block(
+//   inset: 8pt,
+//   text(fill: foreground, font: "Fira Mono", it)
+//   radius: 5pt,
+//   fill: rgb("#1d2433"),
+// )
 
 #show link: this => {
     let show-type = "underline"
@@ -87,35 +94,27 @@ Links:
 
 ]
 
-
 #slide[
   == Open Networking Foundation (ONF)
 
-  #one-by-one(start: 1, mode: "transparent")[
-      - Non-profit consortium founded in 2011
-        #v(3em)
-  ][
-      - Promotes networking through *Software Defined Networking* (SDN)
-        #v(3em)
-  ][
-      - Standardizes the *OpenFlow* protocol
-  ]
+  #v(2em)
+
+  - Non-profit consortium founded in 2011 #v(1em)
+
+  - Promotes networking through *Software Defined Networking* (SDN) #v(1em)
+
+  - Standardizes the *OpenFlow* protocol
 ]
 
 #slide[
   == Software Defined Networking (SDN)
 
   #side-by-side[
-      #one-by-one(start: 1, mode: "transparent")[
-          - Born to overcome the limitations of traditional network architectures
+      - Born to overcome the limitations of traditional network architectures
 
-      ][
-          - Decouples the control plane from the data plane
+      - Decouples the control plane from the data plane
 
-      ][
-          - Centralizes the control of the network
-
-      ]
+      - Centralizes the control of the network
   ][
       #image("images/1t.png", width: 70%)
       #image("images/2t.png", width: 70%)
@@ -125,62 +124,159 @@ Links:
 #slide[
     == OpenFlow Protocol
 
-    #one-by-one(start: 1, mode: "transparent")[
-        - Gives access to the *forwarding plane* (data plane) of a network device #v(1em)
-    ][
-        - Mainly used by switches and controllers #v(1em)
-    ][
-        - Layered on top of the *Transport Control Protocol* (TCP) #v(1em)
-    ][
-        - De-facto standard for SDN
-    ]
+    - Gives access to the *forwarding plane* (data plane) of a network device #v(1em)
+    - Mainly used by switches and controllers #v(1em)
+    - Layered on top of the *Transport Control Protocol* (TCP) #v(1em)
+    - De-facto standard for SDN
 ]
 
 #slide[
     == OpenFlow Development
 
-    - First appeared in 2008 at @mckeown2008openflow
-
-    - In 2012, Google deploys OpenFlow in its internal network with significant improvements (Urs Hölzle promotes it#footnote[Inter-Datacenter WAN with centralized TE using SDN and OpenFlow])
-
+    - First appeared in 2008 @mckeown2008openflow #v(1em)
+    - In April 2012, Google deploys OpenFlow in its internal network with significant improvements (Urs Hölzle promotes it#footnote[Inter-Datacenter WAN with centralized TE using SDN and OpenFlow.]) #v(1em)
+    - In January 2013, NEC rolls out OpenFlow for Microsoft Hyper-V #v(1em)
+    - Latest version is 1.5.1 (Apr 2015)
 ]
 
+#slide[
+  = Fields in OpenFlow Standard
 
-#focus-slide(background: foreground, foreground: background)[
-  _Focus!_
+  #v(2em)
 
-  This is very important.
+  #table(
+      columns: (1fr, 1fr, auto),
+      table.header(
+          "Version",
+          "Date",
+          "Header Fields"
+      ),
+      "OF 1.0",
+      "Dec 2009",
+      "12 fields (Ethernet, TCP/IPv4)",
+      "OF 1.1",
+      "Feb 2011",
+      "15 fields (MPLS, inter-table metadata)",
+      "OF 1.2",
+      "Dec 2011",
+      "36 fields (APR, ICMP, IPv6, etc.)",
+      "OF 1.3",
+      "Jun 2012",
+      "40 fields",
+      "OF 1.4",
+      "Oct 2013",
+      "41 fields",
+  )
+
+  More Details on the OpenFlow v1.0.0 Switch Specification #footnote[
+      https://opennetworking.org/wp-content/uploads/2013/04/openflow-spec-v1.0.0.pdf
+  ]
+]
+
+#focus-slide(background: problem-background, foreground: foreground)[
+    == OpenFlow is protocol-dependent
+
+    - #text(small-size)[Fixed set of fields and parser based on standard protocols] #text(tiny-size)[(Ethernet, IPv4/IPv6, TCP/UDP)]
+
+    - #text(small-size)[Assumes that the match+action table are in series]
 ]
 
 #centered-slide[
-  = Let's start a new section!
+    = P4: #underline[P]rogramming #underline[P]rotocol-Independent #underline[P]acket #underline[P]rocessors
+
+    #v(2em)
+
+    Bosshart believed that future generations of OpenFlow would have allowed the controller to _tell the switch how to operate_ @bosshart2014p4
 ]
 
 #slide[
-  == Dynamic slide
-  Did you know that...
+  == Goals and Challenges
 
-  #pause
-  ...you can see the current section at the top of the slide?
+  #one-by-one(start: 1, mode: "transparent")[
+      *Reconfigurability*: the controller should be able to redefine the packet parsing and processing in the field
+
+  ][
+      *Protocol Independence*: the switch should _headers_ using parsing and processing using _match+action_ tables
+
+    ][
+        *Target Independence*: a compiler from _target-independent_ description to _target-dependent_ binary
+    ]
 ]
 
 #slide[
-  = Test
+  == Abstract Forwarding Model (AFM)
 
-  Did you know that...
+  #side-by-side[
+      #one-by-one(start: 1, mode: "transparent")[
+          #text(small-size)[1. Parsing the packet headers]
 
-  #pause
-  ...you can see the current section at the top of the slide?
+      ][
+          #text(small-size)[
+          2. The fields are passed to the match-action pipeline.
+              - *Ingrees*: determines the egress port/queue
+              - *Egress*: per-instance header modifications
+          ]
+
+      ][
+          #text(small-size)[3. Metadata processing (e.g., timestamp)]
+      ][
+          #text(small-size)[4. As in OpenFlow, the queuing discipline is chosen at switch configuration time]
+      ]
+  ][
+      #image("images/3t.png")
+  ]
 ]
 
 #slide[
-  == Dynamic slide
-  Did you know that...
+    == Two-stage Compilation
 
-  #pause
-  ...you can see the current section at the top of the slide?
+    Imperative control flow program based on *AFM* #v(1em)
+
+    1. The compiler translate the P4 program into *TDGs* #text(tiny-size)[(Table Dependency Graphs)] #v(1em)
+
+    2. The *TDGs* are compiled into *target-dependent* code
+]
+
+#slide[
+    == Language Design - Header
+    #text(small-size)[Describes the structure of a series of fields including the widths and constraints on values.]
+    #side-by-side[
+        #raw(
+"header ethernet {
+  fields {
+    dst_addr: 48; // bits
+    src_addr: 48;
+    ethertype: 16;
+  }
+}", lang: "c++")
+    ][
+        #raw(
+"header vlan {
+  fields {
+    pcp: 3;
+    cfi: 1;
+    vid: 12;
+    ethertype: 16;
+  }
+}", lang: "c++")
+    ]
 ]
 
 #hidden-bibliography(
     bibliography("local.bib")
 )
+
+
+// Example Transparent
+// #slide[
+//   == Open Networking Foundation (ONF)
+//   #one-by-one(start: 1, mode: "transparent")[
+//       - Test
+//         #v(3em)
+//   ][
+//       - Test
+//         #v(3em)
+//   ][
+//       - Test
+//   ]
+// ]
