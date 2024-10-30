@@ -173,12 +173,15 @@ Links:
   ]
 ]
 
-#focus-slide(background: problem-background, foreground: foreground)[
+// #focus-slide(background: problem-background, foreground: foreground)[
+#focus-slide(background: foreground, foreground: background)[
     == OpenFlow is protocol-dependent
 
-    - #text(small-size)[Fixed set of fields and parser based on standard protocols] #text(tiny-size)[(Ethernet, IPv4/IPv6, TCP/UDP)]
+    #text(small-size)[Fixed set of fields and parser based on standard protocols]
 
-    - #text(small-size)[Assumes that the match+action table are in series]
+    #text(tiny-size)[(Ethernet, IPv4/IPv6, TCP/UDP)]
+
+    // #text(small-size)[Assumes that the match+action table are in series]
 ]
 
 #centered-slide[
@@ -220,7 +223,7 @@ Links:
       ][
           #text(small-size)[3. Metadata processing (e.g., timestamp)]
       ][
-          #text(small-size)[4. As in OpenFlow, the queuing discipline is chosen at switch configuration time]
+          #text(small-size)[4. As in OpenFlow, the queuing discipline is chosen at switch configuration time (e.g., minimum rate)]
       ]
   ][
       #image("images/3t.png")
@@ -229,17 +232,32 @@ Links:
 
 #slide[
     == Two-stage Compilation
+    #align(center)[Imperative control flow program based on *AFM*] #v(1em)
+    #side-by-side[
+        1. The compiler translate the P4 program into *TDGs* #text(tiny-size)[(Table Dependency Graphs)] #v(1em)
 
-    Imperative control flow program based on *AFM* #v(1em)
-
-    1. The compiler translate the P4 program into *TDGs* #text(tiny-size)[(Table Dependency Graphs)] #v(1em)
-
-    2. The *TDGs* are compiled into *target-dependent* code
+        2. The *TDGs* are compiled into *target-dependent* code
+    ][
+        #image("images/4t.png")
+    ]
 ]
 
+#focus-slide(background: foreground, foreground: background)[
+    = Language Design
+     #text(tiny-size)[Header: Describes the structure of a series of fields including the widths and constraints on values]
+
+    #text(tiny-size)[Parser: Specifies how to identify headers and valid header sequences within packets]
+
+    #text(tiny-size)[Tables: The P4 program defines the fields on which a table may match and the actions it may execute]
+
+    #text(tiny-size)[Actions: P4 supports construction of complex actions from simpler protocol-independent primitives. These complex actions are available within match+action]
+
+    #text(tiny-size)[Control Programs: The control program determines the order of match+action tables that are applied to a packet. A simple imperative program describe the flow of control between match+action]
+]
+
+
 #slide[
-    == Language Design - Header
-    #text(small-size)[Describes the structure of a series of fields including the widths and constraints on values.]
+    == Header
     #side-by-side[
         #raw(
 "header ethernet {
@@ -260,6 +278,25 @@ Links:
   }
 }", lang: "c++")
     ]
+]
+
+#slide[
+    == Parser
+]
+
+#slide[
+    == Tables
+    #text(small-size)[]
+]
+
+#slide[
+    == Actions
+    #text(small-size)[Define the operations that can be performed on the packet]
+]
+
+#slide[
+    == Control Programs
+    #text(small-size)[Define the control flow of the packet processing pipeline]
 ]
 
 #hidden-bibliography(
