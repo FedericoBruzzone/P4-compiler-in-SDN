@@ -15,7 +15,7 @@ Links:
 
 #show: simple-theme.with(
     aspect-ratio: "16-9",
-    footer: [Adapt Lab -- Università degli Studi di Milan],
+    footer: [Adapt Lab -- Università degli Studi di Milano],
     background: background,
     foreground: foreground,
 )
@@ -243,21 +243,42 @@ Links:
 ]
 
 #focus-slide(background: foreground, foreground: background)[
-    = Language Design
-     #text(tiny-size)[Header: Describes the structure of a series of fields including the widths and constraints on values]
+    == Real Case Scenario
+    #v(-1em)
 
-    #text(tiny-size)[Parser: Specifies how to identify headers and valid header sequences within packets]
+    #align(left)[
+        #text(small-size)[Setup: *L2 Network Architecture*]
+        #text(tiny-size)[
+            - _Edge (top-of-rack switches)_: connect end-hosts to the network
+            - _Core_: central layer that connects the edge devices
+        ]
 
-    #text(tiny-size)[Tables: The P4 program defines the fields on which a table may match and the actions it may execute]
+        #text(small-size)[Problem: *Growing End-Hosts and Overflowing Tables*]
+            #text(tiny-size)[
+                - The L2 forwarding tables in the _core_ are becoming too large $arrow$ *overflow*
+                - It can cause _packet loss_ and _network congestion_
+        ]
 
-    #text(tiny-size)[Actions: P4 supports construction of complex actions from simpler protocol-independent primitives. These complex actions are available within match+action]
+        #text(small-size)[Solutions: *Muti-protocol Label Switching and PortLand*]
+        #text(tiny-size)[
+            - _MPLS_: a technique that uses labels to make data forwarding decisions $arrow$ *with multiple tags is daunting*
+            - _PortLand_: a scalable L2 network architecture $arrow$ *rewrite MAC addresses*
+        ]
+    ]
+]
 
-    #text(tiny-size)[Control Programs: The control program determines the order of match+action tables that are applied to a packet. A simple imperative program describe the flow of control between match+action]
+#slide[
+    = P4: Language Design
+
+    TODO
 ]
 
 
 #slide[
     == Header
+    #v(-2em)
+    _Describes the structure of a series of fields and constraints on values_
+
     #side-by-side[
         #raw(
 "header ethernet {
@@ -281,22 +302,204 @@ Links:
 ]
 
 #slide[
+    == Header (Cont.)
+    #side-by-side(columns: (auto, auto))[
+    #raw(
+"header mTag {
+  fields {
+    up1: 8;
+    up2: 8;
+    down1: 8;
+    down2: 8;
+    ethertype: 16;
+  }
+}", lang: "c++")][
+    - _mTag_ can be added without altering the existing headers
+    - The core has two layers of aggregation
+    - Each core switch examines on of these bytes detemined by its *location* and the *direction* of the packet
+    ]
+]
+
+#slide[
     == Parser
+    #v(-2em)
+    _Specifies how to identify headers and valid header sequences_
+    #align(center)[#raw("parser start { ethernet; }", lang: "c++")]
+    #side-by-side[
+        #raw(
+"parser ethernet {
+  switch(ethertype) {
+    case 0x8100: vlan;
+    case 0x9100: vlan;
+    case 0x800: ipv4;
+    // Other cases
+  }
+}", lang: "c++")
+    ][
+        #raw(
+"parser vlan {
+  switch(ethertype) {
+    case 0xaaaa: mTag;
+    case 0x800: ipv4;
+    // Other cases
+  }
+}
+", lang: "c++")
+    ]
+
 ]
 
 #slide[
-    == Tables
-    #text(small-size)[]
+    == Parser (Cont.)
+    #v(1em)
+    #side-by-side(columns: (auto, auto))[
+        #raw(
+"parser mTag {
+  switch(ethertype) {
+    case 0x800: ipv4;
+    // Other cases
+  }
+}", lang: "c++")
+    ][
+        - Reached a state for a new header, the State Machine extracts the header and sends it to the match+action pipeline
+        - The parser for _mTag_ is simple, it has only four states
+    ]
+
+]
+#slide[
+    == Table
+    #v(-2em)
+    _Defines the fields to match on and the actions to take_
+    #side-by-side(columns: (auto, auto))[
+    #text(small-size)[
+      #raw(
+"table mTag_table {
+  reads {
+    ethernet.dst_addr: exact;
+    vlan.vid: exact;
+  }
+  actions {
+    // At runtime, entries are
+    // programmed with params
+    // for the mTag action.
+    add_mTag;
+  }
+  max_size: 20000;
+}", lang: "c++")
+    ]][
+        - `reads`: the edge switch matches on the L2 destination address and the VLAN ID
+        - `actions`: selects an _mTag_ to add to the header
+        - `max_size`: the maximum number of entries
+        - The compiler knows what memory type use (e.g., TCAM, SRAM) and the amount of memory to allocate
+    ]
 ]
 
 #slide[
-    == Actions
-    #text(small-size)[Define the operations that can be performed on the packet]
+    == Action
+    #v(-2em)
+    _Construction of actions from simpler protocol-independent primitives_
+    #side-by-side(columns: (60%, 40%))[
+    #text(small-size)[
+        #raw(
+"action add_mTag(up1, up2, down1, down2, egr_spec) {
+  add_header(mTag);
+  // Copy VLAN ethertype to mTag
+  copy_field(mTag.ethertype, vlan.ethertype);
+  // Set VLAN’s ethertype to signal mTag
+  set_field(vlan.ethertype, 0xaaaa);
+  set_field(mTag.up1, up1);
+  set_field(mTag.up2, up2);
+  set_field(mTag.down1, down1);
+  set_field(mTag.down2, down2);
+  // Set the destination egress port as well
+  set_field(metadata.egress_spec, egr_spec);
+}
+    ", lang: "c++")
+]
+    ][
+      - P4 assumes parallel execution
+      - Parameters are passed from the match table at runtime
+      - The switch inserts the _mTag_ afer the VLAN header
+    ]
 ]
 
 #slide[
     == Control Programs
-    #text(small-size)[Define the control flow of the packet processing pipeline]
+    #v(-2em)
+    _Determines the order of match+action tables that are applied to a packet_
+    #side-by-side(columns: (auto, auto))[
+        #text(0.6em)[
+            #raw(
+"control main() {
+  // Verify mTag state and port are consistent
+  table(source_check);
+  // If no error from source_check, continue
+  if (!defined(metadata.ingress_error)) {
+    // Attempt to switch to end hosts
+    table(local_switching);
+    if (!defined(metadata.egress_spec)) {
+      // Not a known local host; try mtagging
+      table(mTag_table);
+    }
+    // Check for unknown egress state or
+    // bad retagging with mTag.
+    table(egress_check);
+  }
+}", lang: "c++")
+        ]][
+            #text(small-size)[
+                - _mTag_ should only be seen on ports to the core
+
+                - `source_check` strips the _mTag_ and records it in the metadata to avoid retagging
+
+                - If the `local_switching` table misses, the packet is not destined for a local host
+
+                - Both _local_ and _core_ forwarding control is handled by the `egress_check` table
+
+                - If unknown destination, the SDN controller is notified during `egress_check`
+            ]
+        ]
+]
+
+#slide[
+  == Table (Addition)
+  #v(-1em)
+  #text(small-size)[
+        #raw(
+"table source_check {
+  // Verify mtag only on ports to the core
+  reads {
+    mtag : valid; // Was mtag parsed?
+    metadata.ingress_port : exact;
+  }
+  actions { // Each table entry specifies *one* action
+    // If inappropriate mTag, send to CPU
+    fault_to_cpu;
+    // If mtag found, strip and record in metadata
+    strip_mtag;
+    // Otherwise, allow the packet to continue
+    pass;
+  }
+  max_size: 64; // One rule per port
+}", lang: "c++")
+  ]
+]
+
+#slide[
+  == Table (Addition)
+  #v(-1em)
+  #text(small-size)[
+        #raw(
+"table local_switching {
+  // Reads destination and checks if local
+  // If miss occurs, goto mtag table.
+}
+table egress_check {
+  // Verify egress is resolved
+  // Do not retag packets received with tag
+  // Reads egress and whether packet was mTagged
+}", lang: "c++")
+  ]
 ]
 
 #hidden-bibliography(
