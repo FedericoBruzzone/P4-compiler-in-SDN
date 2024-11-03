@@ -387,10 +387,11 @@ Links:
   max_size: 20000;
 }", lang: "c++")
     ]][
+        The compiler knows what memory type use (e.g., TCAM, SRAM) and the amount of memory to allocate
+
         - `reads`: the edge switch matches on the L2 destination address and the VLAN ID
         - `actions`: selects an _mTag_ to add to the header
         - `max_size`: the maximum number of entries
-        - The compiler knows what memory type use (e.g., TCAM, SRAM) and the amount of memory to allocate
     ]
 ]
 
@@ -459,6 +460,101 @@ Links:
                 - If unknown destination, the SDN controller is notified during `egress_check`
             ]
         ]
+]
+
+#slide[
+    = P4: Compilation Process
+
+    TODO
+]
+
+#slide[
+    == Compiling Packet Parsers
+
+    #v(2em)
+
+    - For devices with _programmable_ parsers, the compiler generates the parser state machine #text(tiny-size)[(see PISA architecture)]
+
+    #v(1em)
+
+    - For devices with _fixed_ parsers, the compiler verifies that the parser description is _consistent_ with the device's fixed parser #text(tiny-size)[(e.g., ASICs)]
+]
+
+#slide[
+    == Compiling Packet Parsers (Cont.)
+
+    _Parser state table entries for the `vlan` and `mTag` sections of the parser_
+
+    #align(center)[
+    #table(
+        columns: (auto, auto, auto),
+        align: center,
+         table.header(
+             "Current Version",
+             "Lookup Value",
+             "Next State"
+         ),
+        `vlan`, "0xaaaa", `mTag`,
+        `vlan`, "0x800",  `ipv4`,
+        `vlan`, "*",      "stop",
+        `mTag`, "0x800",  `ipv4`,
+        `mTag`, "*",      "stop",
+    )]
+
+    #text(small-size)[The \* is a wildcard that matches any value]
+
+    #text(small-size)[The stop state indicates that the parser has finished processing the packet]
+]
+
+#slide[
+    == Compiling Control Programs
+
+    #one-by-one(start: 1, mode: "transparent")[
+        #align(center)[_The imperative control-flow representation does not call out dependencies between tables or opportunities for concurrency_]
+    ][
+        1. The compiler analyzes the `control` program to determine dependencies between tables and opportunities for concurrency
+
+    ][
+        2. The compiler generates the target configuration for the switch
+
+    ][
+        #align(center)[
+            *Is this not familiar?*
+            #v(-1em)
+            #text(tiny-size)[Two-stage compilation]
+        ]
+    ]
+]
+
+#slide[
+    == Software Switches
+
+    TODO
+]
+
+#slide[
+    == Hardware Switches with RAM and TCAM
+
+    TODO
+]
+
+#slide[
+    == Switches supporting parallel tables
+
+    TODO
+]
+
+#slide[
+    == Switches that apply actions at the end of the pipeline
+
+    TODO
+]
+
+
+#slide[
+    == Switches with a few tables
+
+    TODO
 ]
 
 #slide[
