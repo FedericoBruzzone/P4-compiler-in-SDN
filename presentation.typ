@@ -1,3 +1,4 @@
+
 #import "@preview/polylux:0.3.1": *
 #import themes.simple: *
 
@@ -84,7 +85,7 @@ Links:
   #text(small-size)[
       Slides available at
       #v(-1em)
-      #link("https://federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf]
+      #link("https://federicobruzzone.github.io/activities/presentations/P4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/P4-compiler-in-SDN.pdf]
   ]
 ]
 
@@ -621,7 +622,7 @@ Links:
         Slides available at
         #v(-1em)
         #text(0.9em)[
-            #link("https://federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf]
+            #link("https://federicobruzzone.github.io/activities/presentations/P4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/P4-compiler-in-SDN.pdf]
         ]
     ]
 
