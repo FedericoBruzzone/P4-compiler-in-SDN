@@ -81,8 +81,11 @@ Links:
 
   Milan, Italy -- #datetime.today().display("[day] [month repr:long] [year repr:full]")
 
-  #text(tiny-size)[Slides available at:]
-  #text(tiny-size)[#link("https://federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf]]
+  #text(small-size)[
+      Slides available at
+      #v(-1em)
+      #link("https://federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf]
+  ]
 ]
 
 #centered-slide[
@@ -134,7 +137,7 @@ Links:
     == OpenFlow Development
 
     - First appeared in 2008 @mckeown2008openflow #v(1em)
-    - In April 2012, Google deploys OpenFlow in its internal network with significant improvements (Urs Hölzle promotes it#footnote[Inter-Datacenter WAN with centralized TE using SDN and OpenFlow.]) #v(1em)
+    - In April 2012, Google deploys OpenFlow in its internal network with significant improvements (Urs Hölzle promotes it#footnote[#link("https://opennetworking.org/wp-content/uploads/2013/02/cs-googlesdn.pdf")[Inter-Datacenter WAN with centralized TE using SDN and OpenFlow.]]) #v(1em)
     - In January 2013, NEC rolls out OpenFlow for Microsoft Hyper-V #v(1em)
     - Latest version is 1.5.1 (Apr 2015)
 ]
@@ -151,21 +154,11 @@ Links:
           "Date",
           "Header Fields"
       ),
-      "OF 1.0",
-      "Dec 2009",
-      "12 fields (Ethernet, TCP/IPv4)",
-      "OF 1.1",
-      "Feb 2011",
-      "15 fields (MPLS, inter-table metadata)",
-      "OF 1.2",
-      "Dec 2011",
-      "36 fields (APR, ICMP, IPv6, etc.)",
-      "OF 1.3",
-      "Jun 2012",
-      "40 fields",
-      "OF 1.4",
-      "Oct 2013",
-      "41 fields",
+      "OF 1.0", "Dec 2009", "12 fields (Ethernet, TCP/IPv4)",
+      "OF 1.1", "Feb 2011", "15 fields (MPLS, inter-table metadata)",
+      "OF 1.2", "Dec 2011", "36 fields (APR, ICMP, IPv6, etc.)",
+      "OF 1.3", "Jun 2012", "40 fields",
+      "OF 1.4", "Oct 2013", "41 fields",
   )
 
   More Details on the OpenFlow v1.0.0 Switch Specification #footnote[
@@ -270,7 +263,17 @@ Links:
 #slide[
     = P4: Language Design
 
-    TODO
+    #v(2em)
+
+    *Header*: #text(0.9em)[describes the structure of a series of fields and constraints on values]
+
+    *Parser*: #text(0.9em)[specifies how to identify headers and valid header sequences]
+
+    *Table*: #text(0.9em)[defines the fields to match on and the actions to take]
+
+    *Action*: #text(0.9em)[construction of actions from simpler protocol-independent primitives]
+
+    *Control Programs*: #text(0.9em)[determines the order of match+action tables that are applied to a packet]
 ]
 
 
@@ -465,7 +468,15 @@ Links:
 #slide[
     = P4: Compilation Process
 
-    TODO
+    #v(2em)
+
+    - The P4 compiler translates the P4 program into a _target-independent_ representation #text(tiny-size)[(TDGs)]
+
+    - The TDGs are compiled into _target-dependent_ code
+
+    - The compiler can optimize the table layout to minimize the number of tables and the number of lookups
+
+    - The compiler can detect data dependencies and arrange tables in parallel or in series
 ]
 
 #slide[
@@ -511,6 +522,7 @@ Links:
 
     #one-by-one(start: 1, mode: "transparent")[
         #align(center)[_The imperative control-flow representation does not call out dependencies between tables or opportunities for concurrency_]
+        #v(1em)
     ][
         1. The compiler analyzes the `control` program to determine dependencies between tables and opportunities for concurrency
 
@@ -527,35 +539,110 @@ Links:
 ]
 
 #slide[
-    == Software Switches
+    == 1. Software Switches
 
-    TODO
+    #side-by-side[
+        - *Software Switches* provide complete flexibility:
+
+          1. Table Count #v(1em)
+
+          2. Table Configuration #v(1em)
+
+          3. Parsing under SW control
+    ][
+        - The compiler:
+
+            1. Maps the `mTag` table graph to switch tables
+            2. Uses table type to constrain width, height, and matching criterion
+            3. Can optimize ternary matches with SW data structures
+    ]
 ]
 
 #slide[
-    == Hardware Switches with RAM and TCAM
+    == 2. Hardware Switches with RAM and TCAM
 
-    TODO
+    #align(center)[
+        #v(1em)
+
+        In *edge* switches, the compiler configure hashing to perform efficient exact-matching using RAM
+
+        #v(2em)
+
+        In *core* switches, which match on a subset of fields, the compiler maps the table to TCAM
+    ]
 ]
 
 #slide[
-    == Switches supporting parallel tables
+    == 3. Switches supporting parallel tables
 
-    TODO
+    #align(center)[
+        #v(1em)
+
+        The compiler can *detect* data dependencies and arrange tables in parallel or in series
+
+        #v(2em)
+
+        In the `mTag` example, the `mTag_table` and `local_switching` tables can be executed in parallel up to the `add_mTag` action
+    ]
 ]
 
 #slide[
-    == Switches that apply actions at the end of the pipeline
+    == 4. Switches that apply actions at the end of the pipeline
 
-    TODO
+    #align(center)[
+        #v(1em)
+        The compiler can *tell* to the intermediate stages to generate metadata for the final action
+
+        #v(2em)
+
+        In the `mTag` example, whether the `mTag` is added or not could be represented in metadata
+    ]
 ]
 
 
 #slide[
-    == Switches with a few tables
+    == 5. Switches with a few tables
 
-    TODO
+    #align(center)[
+        The compiler can *optimize* the table layout to minimize the number of tables and the number of lookups
+
+        When a controller installs a rule (at runtime), the compiler can generate P4 tables to generate the rules for the single physical table
+
+        #v(2em)
+
+        In the `mTag` example, the `local_switching` table could be merged with the `mTag_table`
+    ]
 ]
+
+#polylux-slide[
+    #align(center)[
+        = Thanks for your attention!
+
+        Slides available at
+        #v(-1em)
+        #text(0.9em)[
+            #link("https://federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf")[federicobruzzone.github.io/activities/presentations/p4-compiler-in-SDN.pdf]
+        ]
+    ]
+
+    #v(1em)
+
+    #table(
+        columns: (1fr, 3fr),
+        align: (right, left),
+        "Website",  link("https://federicobruzzone.github.io/")[federicobruzzone.github.io],
+        "Github",   link("https://github.com/FedericoBruzzone")[github.com/FedericoBruzzone],
+        "𝕏",        link("https://x.com/fedebruzzone7")[\@fedebruzzone7],
+        "LinkedIn", link("https://www.linkedin.com/in/federico-bruzzone/")[in/federico-bruzzone],
+        "Telegram", link("https://t.me/federicobruzzone")[\@federicobruzzone],
+        "Email 1",  link("mailto:federico.bruzzone@unimi.it")[federico.bruzzone\@unimi.it],
+        "Email 2",  link("mailto:federico.bruzzone.i@gmail.com")[federico.bruzzone.i\@gmail.com],
+    )
+]
+
+// #hidden-bibliography(
+#bibliography("local.bib")
+// )
 
 #slide[
   == Table (Addition)
@@ -597,22 +684,3 @@ table egress_check {
 }", lang: "c++")
   ]
 ]
-
-#hidden-bibliography(
-    bibliography("local.bib")
-)
-
-
-// Example Transparent
-// #slide[
-//   == Open Networking Foundation (ONF)
-//   #one-by-one(start: 1, mode: "transparent")[
-//       - Test
-//         #v(3em)
-//   ][
-//       - Test
-//         #v(3em)
-//   ][
-//       - Test
-//   ]
-// ]
