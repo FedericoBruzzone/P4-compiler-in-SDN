@@ -1,24 +1,18 @@
-
-#import "@preview/polylux:0.3.1": *
-#import themes.simple: *
-
-#import "@preview/hidden-bib:0.1.0": hidden-bibliography
-
 /*
 Links:
   - http://wpage.unina.it/rcanonic/didattica/dcn/lucidi/DCN-L08-L09-OpenFlow.pdf
 */
 
+#import "./theme/fcb.typ": *
+
 #let background = silver
 #let foreground = navy
 #let link-background = eastern
-#let problem-background = rgb(255, 204, 0)
 
-#show: simple-theme.with(
-    aspect-ratio: "16-9",
-    footer: [Adapt Lab -- Università degli Studi di Milano],
-    background: background,
-    foreground: foreground,
+#show: fcb-theme.with( 
+  aspect-ratio: "16-9", 
+  footer: [Federico Bruzzone -- Adapt Lab -- Università degli Studi di Milano], background: background, 
+  foreground: foreground,
 )
 
 #let tiny-size = 0.4em
@@ -73,12 +67,12 @@ Links:
   = P4 Compiler in SDN // P4: programming protocol-independent packet processors
   #v(2em)
 
-  Federico Bruzzone#footnote[
+  Federico Bruzzone, #footnote[
       ADAPT Lab -- Università degli Studi di Milano, \
       #h(1.5em) Website: #link("https://federicobruzzone.github.io/")[federicobruzzone.github.io], \
       #h(1.5em) Github: #link("https://github.com/FedericoBruzzone")[github.com/FedericoBruzzone], \
       #h(1.5em) Email: #link("mailto:federico.bruzzone@unimi.it")[federico.bruzzone\@unimi.it]
-  ], PhD Student
+  ] PhD Student
 
   Milan, Italy -- #datetime.today().display("[day] [month repr:long] [year repr:full]")
 
@@ -167,7 +161,6 @@ Links:
   ]
 ]
 
-// #focus-slide(background: problem-background, foreground: foreground)[
 #focus-slide(background: foreground, foreground: background)[
     == OpenFlow is protocol-dependent
 
@@ -685,3 +678,10 @@ table egress_check {
 }", lang: "c++")
   ]
 ]
+
+// Old setup
+
+// #import "@preview/polylux:0.3.1": *
+// #import "@preview/hidden-bib:0.1.0": hidden-bibliography
+// #import themes.simple: *
+// #show: simple-theme.with( aspect-ratio: "16-9", footer: [Federico Bruzzone -- Adapt Lab -- Università degli Studi di Milano], background: background, foreground: foreground,)
