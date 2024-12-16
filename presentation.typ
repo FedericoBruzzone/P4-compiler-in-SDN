@@ -9,9 +9,9 @@ Links:
 #let foreground = navy
 #let link-background = eastern
 
-#show: fcb-theme.with( 
-  aspect-ratio: "16-9", 
-  footer: [Federico Bruzzone -- Adapt Lab -- Università degli Studi di Milano], background: background, 
+#show: fcb-theme.with(
+  aspect-ratio: "16-9",
+  footer: [Federico Bruzzone -- Adapt Lab -- Università degli Studi di Milano], background: background,
   foreground: foreground,
 )
 
@@ -182,11 +182,16 @@ Links:
 #slide[
   == Goals and Challenges
 
+  #v(-1em)
+
   #one-by-one(start: 1, mode: "transparent")[
-      *Reconfigurability*: the controller should be able to redefine the packet parsing and processing in the field
+      *New Control Plane Specification*: P4Runtime for controlling the data plane elements of a device defined by a P4 program
 
   ][
-      *Protocol Independence*: the switch should _headers_ using parsing and processing using _match+action_ tables
+      *Reconfigurability*: the controller should be able to redefine the packet parsing and processing in the field
+
+    ][
+        *Protocol Independence*: the switch should process _headers_ using parsing and processing using _match+action_ tables
 
     ][
         *Target Independence*: a compiler from _target-independent_ description to _target-dependent_ binary
